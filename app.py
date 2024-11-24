@@ -1,30 +1,35 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
+from pipeline.pipeline import Pipeline
 
 app = Flask(__name__)
 
-# Database configurations
-db_config = {
-    "host":"localhost",
-    "user":"your_username",
-    "password":"password",
-    "database":"database_name"
+pipeline = Pipeline(upload_folder="./uploads")
 
-}
+TABLE_NAME = "apartments"
 
-# Initialize the pipeline
-pipeline = Pipeline(db_config)
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    """
+    API endpoint to handle file uploads and process them
+    """
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error":"No file provided"}), 400
+        
+        file = request.files['file']
+        if not file:
+            return jsonify({"error": "File is empty"}), 400
+        
+        result = pipeline.process_file(file, TABLE_NAME)
 
-@app.route('/process', methods=['POST'])
-def process_file():
-    file = request.files['file']
-    if not file:
-        return {"error":"No file uploaded"}, 400
+        if "error" in result:
+            return jsonify(result), 500
+        
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
-    table_name = "table_name"
-    result = pipeline.process(file, table_name)
-    if "error" in result:
-        return result, 500
-    return result, 200
 
 if __name__=="__main__":
     app.run(debug=True)
+    
