@@ -5,7 +5,8 @@ app = Flask(__name__)
 
 pipeline = Pipeline(upload_folder="./uploads")
 
-TABLE_NAME = "apartments"
+TABLE_NAME = "apartment_data"
+SCHEMA_NAME = "Builders_data"
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -20,7 +21,8 @@ def upload_file():
         if not file:
             return jsonify({"error": "File is empty"}), 400
         
-        result = pipeline.process_file(file, TABLE_NAME)
+        #Added schema_name below
+        result = pipeline.process_file(file, SCHEMA_NAME, TABLE_NAME)
 
         if "error" in result:
             return jsonify(result), 500

@@ -35,8 +35,10 @@ class DatabaseHandler:
         if self.connection:
             self.connection.close()
             print("Database connection closed")
-
-    def fetch_existing_data(self, table_name):
+            
+            
+    #Added schema_name augement in function
+    def fetch_existing_data(self, schema_name, table_name):
         """
         Fetch existing data from the specified table.
         :param table_name: Name of the database table.
@@ -47,7 +49,11 @@ class DatabaseHandler:
         
         cursor = self.connection.cursor(cursor_factory=extras.DictCursor)
         try:
-            query = sql.SQL("SELECT * FROM {table_name}").format(table_name=sql.Identifier(table_name))
+            #Updated Select query
+            query = sql.SQL("SELECT * FROM {schema}.{table}").format(
+            schema=sql.Identifier(schema_name),
+            table=sql.Identifier(table_name)
+            )
             cursor.execute(query)
             result = cursor.fetchall()
 
@@ -57,8 +63,9 @@ class DatabaseHandler:
             raise ValueError(f"Error fetcing data from {table_name}: {e}")
         finally:
             cursor.close()
-        
-    def upload_new_data(self, new_data, table_name):
+            
+    #Added schema_name augement in function
+    def upload_new_data(self, new_data,schema_name, table_name):
         """
         Upload only new data to the database table by comparing it with existing data.
 
@@ -69,7 +76,7 @@ class DatabaseHandler:
         if self.connection is None:
             raise ValueError("No active database connection")
         
-        existing_data = self.fetch_existing_data(table_name)
+        existing_data = self.fetch_existing_data(schema_name,table_name)
 
         if not existing_data.empty:
             combined_data = pd.concat([existing_data, new_data], ignore_index=True)
@@ -85,7 +92,8 @@ class DatabaseHandler:
         try:
             columns = ", ".join(unique_data.columns)
             placeholders = ", ".join(["%s"] * len(unique_data.columns))
-            query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
+            #Updated insert query 
+            query = f'INSERT INTO "{schema_name}"."{table_name}" ({columns}) VALUES ({placeholders})'
             records = [tuple(row) for row in unique_data.to_numpy()]
 
             extras.execute_batch(cursor, query, records)

@@ -10,8 +10,9 @@ class Pipeline:
         self.file_handler = FileHandler(upload_folder=upload_folder)
         self.data_processor = DataProcessor()
         self.db_handler = DatabaseHandler()
-
-    def process_file(self, file, table_name):
+        
+    #Added schema_name augement in function
+    def process_file(self, file, schema_name, table_name):
         """
         Orchestractes the process of file handling, data validation, and database upload.
 
@@ -32,7 +33,8 @@ class Pipeline:
             self.db_handler.connect()
 
             # Upload the new data to the database
-            self.db_handler.upload_new_data(transformed_data, table_name)
+            #Added schema_name 
+            self.db_handler.upload_new_data(transformed_data, schema_name, table_name)
             print(f"Data uploaded successfully to table {table_name}.")
 
             return {"message": "File processed and data uploaded successfully"}
